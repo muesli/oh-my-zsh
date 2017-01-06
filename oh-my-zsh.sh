@@ -51,6 +51,22 @@ for plugin ($plugins); do
   fi
 done
 
+is_alias() {
+  local base_dir=$1
+  local name=$2
+  test -f $base_dir/aliases/$name/$name.alias.zsh \
+    || test -f $base_dir/aliases/$name/_$name
+}
+# Add all defined aliases to fpath. This must be done
+# before running compinit.
+for alias ($aliasdefs); do
+  if is_alias $ZSH_CUSTOM $alias; then
+    fpath=($ZSH_CUSTOM/aliases/$alias $fpath)
+  elif is_alias $ZSH $alias; then
+    fpath=($ZSH/aliases/$alias $fpath)
+  fi
+done
+
 # Figure out the SHORT hostname
 if [[ "$OSTYPE" = darwin* ]]; then
   # macOS's $HOST changes with dhcp, etc. Use ComputerName if possible.
@@ -83,6 +99,15 @@ for plugin ($plugins); do
     source $ZSH_CUSTOM/plugins/$plugin/$plugin.plugin.zsh
   elif [ -f $ZSH/plugins/$plugin/$plugin.plugin.zsh ]; then
     source $ZSH/plugins/$plugin/$plugin.plugin.zsh
+  fi
+done
+
+# Load all of the aliases that were defined in ~/.zshrc
+for alias ($aliasdefs); do
+  if [ -f $ZSH_CUSTOM/aliases/$alias/$alias.alias.zsh ]; then
+    source $ZSH_CUSTOM/alises/$alias/$alias.alias.zsh
+  elif [ -f $ZSH/aliases/$alias/$alias.alias.zsh ]; then
+    source $ZSH/aliases/$alias/$alias.alias.zsh
   fi
 done
 
